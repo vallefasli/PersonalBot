@@ -1,6 +1,5 @@
---extra-index-url https://download.pytorch.org/whl/cpu
 flask
 flask-cors
 pandas
-sentence-transformers
-torch
+requests
+numpy
