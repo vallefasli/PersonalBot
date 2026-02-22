@@ -12,7 +12,7 @@ CORS(app)
 # IMPORTANT: Put your real token here or set it in Vercel Environment Variables
 HF_TOKEN = os.getenv("HF_TOKEN", "your_huggingface_token_here") 
 MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
-API_URL = f"https://router.huggingface.co/hf-inference/pipeline/feature-extraction/{MODEL_ID}"
+API_URL = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{MODEL_ID}"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 # 1. Load data
@@ -77,4 +77,5 @@ def chat():
 
 if __name__ == "__main__":
     app.run()
+
 
