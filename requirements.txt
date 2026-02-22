@@ -1,6 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 flask
 flask-cors
 pandas
 sentence-transformers
-# Using the smaller CPU-only torch to save space
-torch --index-url https://download.pytorch.org/whl/cpu
+torch
