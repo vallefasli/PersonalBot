@@ -11,7 +11,7 @@ CORS(app)
 # --- CONFIGURATION ---
 HF_TOKEN = os.getenv("HF_TOKEN", "your_huggingface_token_here") 
 MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
-# Correct 2026 Router URL
+# Official 2026 Router URL
 API_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL_ID}"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
@@ -21,8 +21,8 @@ csv_path = os.path.join(base_path, "PersonalBot_FineGrained.csv")
 df = pd.read_csv(csv_path)
 
 def get_embedding(text):
-    """Fetches embedding from Hugging Face API using the feature-extraction task"""
-    # We send the task explicitly to avoid the SentenceSimilarity error
+    """Fetches raw vector embedding from Hugging Face"""
+    # Using the 'feature-extraction' task stops the 'missing argument: sentences' error
     payload = {
         "inputs": text,
         "task": "feature-extraction",
@@ -35,16 +35,13 @@ def get_embedding(text):
     
     res_json = response.json()
     
-    # Feature extraction often returns a nested list: [[[val1, val2, ...]]]
-    # We convert to a numpy array and flatten/mean to get a single vector
-    arr = np.array(res_json)
-    if arr.ndim > 1:
-        return arr.mean(axis=1).flatten() if arr.ndim == 3 else arr.flatten()
-    return arr
+    # Feature extraction returns a 3D list: [[[val1, val2, ...]]]
+    # We convert to numpy and flatten it to a 1D vector
+    vector = np.array(res_json)
+    return vector.flatten()
 
-# 2. Pre-embed the CSV
-# NOTE: If your CSV is long, Vercel might timeout (10s limit). 
-# If that happens, you MUST pre-calculate these locally and save them to the CSV.
+# 2. Pre-embed the CSV (Runs on startup)
+# WARNING: If your CSV has >30 rows, this might hit Vercel's 10s timeout.
 print("Bot initializing: Encoding knowledge base...")
 all_embeddings = np.array([get_embedding(t) for t in df['text'].tolist()])
 
@@ -81,7 +78,7 @@ def chat():
         dot_product = np.dot(filtered_embeddings, user_vector)
         norms = np.linalg.norm(filtered_embeddings, axis=1) * np.linalg.norm(user_vector)
         
-        # Avoid division by zero
+        # Prevent division by zero
         scores = np.divide(dot_product, norms, out=np.zeros_like(dot_product), where=norms!=0)
         
         top_idx = np.argmax(scores)
